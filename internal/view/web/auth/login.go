@@ -31,13 +31,35 @@ func (h *handlers) loginPageHandler(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/auth/create-first-user")
 	}
 
-	return echoutil.RenderNodx(c, http.StatusOK, loginPage())
+	return echoutil.RenderNodx(c, http.StatusOK, loginPage(h.servs.OIDCService.IsEnabled()))
 }
 
-func loginPage() nodx.Node {
+func loginPage(oidcEnabled bool) nodx.Node {
 	content := []nodx.Node{
 		component.H1Text("Login"),
+	}
 
+	// Add OIDC login option if enabled
+	if oidcEnabled {
+		content = append(content,
+			nodx.Div(
+				nodx.Class("mt-4"),
+				nodx.A(
+					nodx.Href("/auth/oidc/login"),
+					nodx.Class("btn btn-outline btn-block"),
+					component.SpanText("Login with SSO"),
+					lucide.ExternalLink(),
+				),
+			),
+			nodx.Div(
+				nodx.Class("divider"),
+				nodx.Text("OR"),
+			),
+		)
+	}
+
+	// Traditional login form
+	content = append(content,
 		nodx.FormEl(
 			htmx.HxPost("/auth/login"),
 			htmx.HxDisabledELT("find button"),
@@ -72,7 +94,7 @@ func loginPage() nodx.Node {
 				),
 			),
 		),
-	}
+	)
 
 	return layout.Auth(layout.AuthParams{
 		Title: "Login",
