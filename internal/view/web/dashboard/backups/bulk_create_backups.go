@@ -222,6 +222,7 @@ func bulkCreateBackupButton() nodx.Node {
 						nodx.Div(
 							nodx.P(nodx.Class("font-medium"), component.SpanText("Create backup tasks for multiple databases")),
 							nodx.P(nodx.Class("text-sm"), component.SpanText("Select databases below and configure backup settings. All selected databases will use the same configuration.")),
+							nodx.P(nodx.Class("text-sm mt-1"), component.SpanText("Each database will get its own subdirectory within the specified base directory for better organization.")),
 						),
 					),
 				),
@@ -294,11 +295,11 @@ func bulkCreateBackupButton() nodx.Node {
 
 					component.InputControl(component.InputControlParams{
 						Name:        "dest_dir",
-						Label:       "Destination Directory",
+						Label:       "Base Destination Directory",
 						Placeholder: "/backups",
 						Required:    true,
 						Type:        component.InputTypeText,
-						HelpText:    "Directory where backups will be stored",
+						HelpText:    "Base directory for backups. Each database will get its own subdirectory (e.g., /backups/database_name)",
 					}),
 
 					component.InputControl(component.InputControlParams{

@@ -83,6 +83,9 @@ func (s *Service) BulkCreateBackups(
 		// Generate backup name from template
 		backupName := s.generateBackupName(req.NameTemplate, database.Name)
 
+		// Create database-specific subdirectory
+		databaseDestDir := s.generateDatabaseDestDir(req.DestDir, database.Name)
+
 		// Create backup parameters
 		params := dbgen.BackupsServiceBulkCreateBackupParams{
 			DatabaseID: dbID,
@@ -97,7 +100,7 @@ func (s *Service) BulkCreateBackups(
 			CronExpression: req.CronExpression,
 			TimeZone:       req.TimeZone,
 			IsActive:       req.IsActive,
-			DestDir:        req.DestDir,
+			DestDir:        databaseDestDir,
 			RetentionDays:  req.RetentionDays,
 			OptDataOnly:    req.OptDataOnly,
 			OptSchemaOnly:  req.OptSchemaOnly,
@@ -127,6 +130,21 @@ func (s *Service) BulkCreateBackups(
 	}
 
 	return response, nil
+}
+
+// generateDatabaseDestDir creates a database-specific destination directory
+func (s *Service) generateDatabaseDestDir(baseDestDir, databaseName string) string {
+	if baseDestDir == "" {
+		return databaseName
+	}
+
+	// Remove trailing slash if present
+	if strings.HasSuffix(baseDestDir, "/") {
+		baseDestDir = baseDestDir[:len(baseDestDir)-1]
+	}
+
+	// Create subdirectory path: baseDestDir/databaseName
+	return baseDestDir + "/" + databaseName
 }
 
 // generateBackupName generates a backup name from template and database name
