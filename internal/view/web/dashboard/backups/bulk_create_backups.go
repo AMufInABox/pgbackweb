@@ -431,17 +431,25 @@ func bulkCreateBackupButton() nodx.Node {
 func checkboxOption(name, label, helpText string, defaultChecked bool) nodx.Node {
 	return nodx.Div(
 		nodx.Class("flex items-start space-x-2"),
-		nodx.Input(
-			nodx.Type("checkbox"),
-			nodx.Name(name),
-			nodx.Value("true"),
-			nodx.Class("checkbox checkbox-primary mt-1"),
-			func() nodx.Node {
-				if defaultChecked {
-					return nodx.Checked("checked")
-				}
-				return nodx.Group()
-			}(),
+		nodx.Group(
+			// Hidden input to ensure "false" is sent when checkbox is unchecked
+			nodx.Input(
+				nodx.Type("hidden"),
+				nodx.Name(name),
+				nodx.Value("false"),
+			),
+			nodx.Input(
+				nodx.Type("checkbox"),
+				nodx.Name(name),
+				nodx.Value("true"),
+				nodx.Class("checkbox checkbox-primary mt-1"),
+				func() nodx.Node {
+					if defaultChecked {
+						return nodx.Checked("checked")
+					}
+					return nodx.Group()
+				}(),
+			),
 		),
 		nodx.Div(
 			nodx.Div(
