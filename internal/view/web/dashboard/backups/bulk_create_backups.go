@@ -307,19 +307,27 @@ func bulkCreateBackupButton() nodx.Node {
 						nodx.Class("mt-2"),
 						alpine.Template(
 							alpine.XIf("is_local == 'false'"),
-							component.SelectControl(component.SelectControlParams{
-								Name:        "destination_id",
-								Label:       "Destination",
-								Required:    false,
-								Placeholder: "Select a destination",
-								Children: []nodx.Node{
-									nodx.Div(
-										htmx.HxGet("/dashboard/backups/bulk-create/destinations"),
-										htmx.HxTrigger("load"),
-										component.SpanText("Loading destinations..."),
+							nodx.Div(
+								nodx.Class("form-control"),
+								nodx.LabelEl(
+									nodx.Class("label"),
+									nodx.SpanEl(
+										nodx.Class("label-text"),
+										component.SpanText("Destination"),
 									),
-								},
-							}),
+								),
+								nodx.Select(
+									nodx.Name("destination_id"),
+									nodx.Class("select select-bordered w-full"),
+									nodx.Id("destination-select"),
+									htmx.HxGet("/dashboard/backups/bulk-create/destinations"),
+									htmx.HxTrigger("intersect once"),
+									nodx.Option(
+										nodx.Value(""),
+										component.SpanText("Select a destination"),
+									),
+								),
+							),
 						),
 					),
 				),
