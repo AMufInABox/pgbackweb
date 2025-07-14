@@ -24,6 +24,7 @@ func indexPage(reqCtx reqctx.Ctx) nodx.Node {
 			component.H1Text("Databases"),
 			nodx.Div(
 				nodx.Class("flex space-x-2"),
+				bulkUpdateConnectionStringButton(),
 				bulkImportDatabaseButton(),
 				createDatabaseButton(),
 			),

@@ -30,4 +30,8 @@ func MountRouter(
 	// Bulk import routes
 	parent.POST("/bulk-import/discover", h.discoverDatabasesHandler)
 	parent.POST("/bulk-import", h.bulkImportDatabasesHandler)
+	
+	// Bulk update routes
+	parent.GET("/bulk-update/list", h.bulkUpdateDatabaseListHandler)
+	parent.POST("/bulk-update", h.bulkUpdateConnectionStringHandler)
 }
