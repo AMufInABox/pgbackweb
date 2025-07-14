@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/service/backups"
 	"github.com/eduardolat/pgbackweb/internal/staticdata"
+	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
@@ -147,6 +149,45 @@ func (h *handlers) bulkCreateBackupDestinationListHandler(c echo.Context) error 
 	}
 
 	return c.HTML(http.StatusOK, html)
+}
+
+func (h *handlers) bulkCreateBackupDestinationControlHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	destinations, err := h.servs.DestinationsService.GetAllDestinations(ctx)
+	if err != nil {
+		return c.HTML(http.StatusInternalServerError, `<div class="alert alert-error">Error loading destinations</div>`)
+	}
+
+	var destinationOptions []nodx.Node
+	if len(destinations) == 0 {
+		destinationOptions = []nodx.Node{
+			nodx.Option(
+				nodx.Value(""),
+				nodx.Disabled(""),
+				component.SpanText("No destinations configured"),
+			),
+		}
+	} else {
+		destinationOptions = []nodx.Node{
+			nodx.Map(
+				destinations,
+				func(dest dbgen.DestinationsServiceGetAllDestinationsRow) nodx.Node {
+					return nodx.Option(nodx.Value(dest.ID.String()), nodx.Text(dest.Name))
+				},
+			),
+		}
+	}
+
+	selectControl := component.SelectControl(component.SelectControlParams{
+		Name:        "destination_id",
+		Label:       "Destination",
+		Required:    false,
+		Placeholder: "Select a destination",
+		Children:    destinationOptions,
+	})
+
+	return echoutil.RenderNodx(c, http.StatusOK, selectControl)
 }
 
 func bulkCreateBackupButton() nodx.Node {
@@ -308,23 +349,27 @@ func bulkCreateBackupButton() nodx.Node {
 						alpine.Template(
 							alpine.XIf("is_local == 'false'"),
 							nodx.Div(
-								nodx.Class("form-control"),
-								nodx.LabelEl(
-									nodx.Class("label"),
-									nodx.SpanEl(
-										nodx.Class("label-text"),
-										component.SpanText("Destination"),
+								nodx.Id("destination-control"),
+								htmx.HxGet("/dashboard/backups/bulk-create/destination-control"),
+								htmx.HxTrigger("intersect once"),
+								htmx.HxSwap("innerHTML"),
+								nodx.Div(
+									nodx.Class("form-control"),
+									nodx.LabelEl(
+										nodx.Class("label"),
+										nodx.SpanEl(
+											nodx.Class("label-text"),
+											component.SpanText("Destination"),
+										),
 									),
-								),
-								nodx.Select(
-									nodx.Name("destination_id"),
-									nodx.Class("select select-bordered w-full"),
-									nodx.Id("destination-select"),
-									htmx.HxGet("/dashboard/backups/bulk-create/destinations"),
-									htmx.HxTrigger("intersect once"),
-									nodx.Option(
-										nodx.Value(""),
-										component.SpanText("Select a destination"),
+									nodx.Select(
+										nodx.Name("destination_id"),
+										nodx.Class("select select-bordered w-full"),
+										nodx.Disabled(""),
+										nodx.Option(
+											nodx.Value(""),
+											component.SpanText("Loading destinations..."),
+										),
 									),
 								),
 							),
