@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/eduardolat/pgbackweb/internal/util/strutil"
 	"github.com/orsinium-labs/enum"
@@ -267,4 +268,59 @@ func (Client) RestoreZip(
 	}
 
 	return nil
+}
+
+// DatabaseInfo represents information about a database
+type DatabaseInfo struct {
+	Name    string
+	Size    string
+	Owner   string
+	Comment string
+}
+
+// QueryDatabases queries all databases from the PostgreSQL server
+func (Client) QueryDatabases(version PGVersion, connString string) ([]DatabaseInfo, error) {
+	query := `
+		SELECT 
+			d.datname as name,
+			pg_size_pretty(pg_database_size(d.datname)) as size,
+			u.usename as owner,
+			COALESCE(pg_catalog.shobj_description(d.oid, 'pg_database'), '') as comment
+		FROM pg_database d
+		LEFT JOIN pg_user u ON d.datdba = u.usesysid
+		WHERE d.datistemplate = false
+		AND d.datallowconn = true
+		ORDER BY d.datname;
+	`
+	
+	cmd := exec.Command(version.Value.PSQL, connString, "-c", query, "-t", "-A", "-F", "|")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error querying databases v%s: %s",
+			version.Value.Version, output,
+		)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	var databases []DatabaseInfo
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		
+		parts := strings.Split(line, "|")
+		if len(parts) >= 4 {
+			databases = append(databases, DatabaseInfo{
+				Name:    parts[0],
+				Size:    parts[1],
+				Owner:   parts[2],
+				Comment: parts[3],
+			})
+		}
+	}
+	
+	return databases, nil
 }

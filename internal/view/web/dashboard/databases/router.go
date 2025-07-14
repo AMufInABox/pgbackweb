@@ -26,4 +26,8 @@ func MountRouter(
 	parent.DELETE("/:databaseID", h.deleteDatabaseHandler)
 	parent.POST("/:databaseID/edit", h.editDatabaseHandler)
 	parent.POST("/:databaseID/test", h.testExistingDatabaseHandler)
+	
+	// Bulk import routes
+	parent.POST("/bulk-import/discover", h.discoverDatabasesHandler)
+	parent.POST("/bulk-import", h.bulkImportDatabasesHandler)
 }
