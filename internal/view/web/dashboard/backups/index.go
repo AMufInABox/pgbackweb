@@ -22,7 +22,11 @@ func indexPage(reqCtx reqctx.Ctx) nodx.Node {
 		nodx.Div(
 			nodx.Class("flex justify-between items-start"),
 			component.H1Text("Backup tasks"),
-			createBackupButton(),
+			nodx.Div(
+				nodx.Class("flex space-x-2"),
+				bulkCreateBackupButton(),
+				createBackupButton(),
+			),
 		),
 		component.CardBox(component.CardBoxParams{
 			Class: "mt-4",

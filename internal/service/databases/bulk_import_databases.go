@@ -11,8 +11,8 @@ import (
 
 // BulkImportRequest represents a request for bulk importing databases
 type BulkImportRequest struct {
-	ConnectionString string
-	Version          string
+	ConnectionString  string
+	Version           string
 	SelectedDatabases []string
 }
 
@@ -77,7 +77,7 @@ func (s *Service) BulkImportDatabases(
 	for _, dbName := range req.SelectedDatabases {
 		// Create connection string for this specific database
 		dbConnString := s.buildDatabaseConnectionString(u, dbName)
-		
+
 		// Test the connection for this database
 		err = s.TestDatabase(ctx, req.Version, dbConnString)
 		if err != nil {
@@ -102,7 +102,7 @@ func (s *Service) BulkImportDatabases(
 		if err != nil {
 			return
 		}
-		
+
 		for _, db := range databases {
 			for _, selectedDB := range req.SelectedDatabases {
 				if db.Name == selectedDB {
@@ -120,10 +120,10 @@ func (s *Service) BulkImportDatabases(
 func (s *Service) buildDatabaseConnectionString(u *url.URL, dbName string) string {
 	// Create a copy of the URL
 	newURL := *u
-	
+
 	// Update the path to include the database name
 	newURL.Path = "/" + dbName
-	
+
 	return newURL.String()
 }
 

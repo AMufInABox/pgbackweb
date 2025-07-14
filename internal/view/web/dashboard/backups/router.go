@@ -27,4 +27,7 @@ func MountRouter(
 	parent.POST("/:backupID/edit", h.editBackupHandler)
 	parent.POST("/:backupID/run", h.manualRunHandler)
 	parent.POST("/:backupID/duplicate", h.duplicateBackupHandler)
+	parent.POST("/bulk-create", h.bulkCreateBackupsHandler)
+	parent.GET("/bulk-create/databases", h.bulkCreateBackupDatabaseListHandler)
+	parent.GET("/bulk-create/destinations", h.bulkCreateBackupDestinationListHandler)
 }

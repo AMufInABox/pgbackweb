@@ -42,7 +42,7 @@ func New(
 	destinationsService := destinations.New(env, dbgen, ints, webhooksService)
 	executionsService := executions.New(env, dbgen, ints, webhooksService)
 	usersService := users.New(dbgen)
-	backupsService := backups.New(dbgen, cr, executionsService)
+	backupsService := backups.New(env, dbgen, cr, executionsService)
 	restorationsService := restorations.New(
 		dbgen, ints, executionsService, databasesService, destinationsService,
 	)

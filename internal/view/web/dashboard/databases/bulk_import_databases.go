@@ -69,7 +69,7 @@ func (h *handlers) bulkImportDatabasesHandler(c echo.Context) error {
 
 	req := databases.BulkImportRequest{
 		ConnectionString:  formData.ConnectionString,
-		Version:          formData.Version,
+		Version:           formData.Version,
 		SelectedDatabases: formData.SelectedDatabases,
 	}
 

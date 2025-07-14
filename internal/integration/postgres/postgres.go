@@ -292,7 +292,7 @@ func (Client) QueryDatabases(version PGVersion, connString string) ([]DatabaseIn
 		AND d.datallowconn = true
 		ORDER BY d.datname;
 	`
-	
+
 	cmd := exec.Command(version.Value.PSQL, connString, "-c", query, "-t", "-A", "-F", "|")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -304,13 +304,13 @@ func (Client) QueryDatabases(version PGVersion, connString string) ([]DatabaseIn
 
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	var databases []DatabaseInfo
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		parts := strings.Split(line, "|")
 		if len(parts) >= 4 {
 			databases = append(databases, DatabaseInfo{
@@ -321,6 +321,6 @@ func (Client) QueryDatabases(version PGVersion, connString string) ([]DatabaseIn
 			})
 		}
 	}
-	
+
 	return databases, nil
 }
