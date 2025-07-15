@@ -36,9 +36,18 @@ func (s *Service) GetExecutionDownloadLinkOrPath(
 		return true, s.ints.StorageClient.LocalGetFullPath(data.Path.String), nil
 	}
 
-	link, err := s.ints.StorageClient.S3GetDownloadLink(
+	var encryptionKeyId, encryptionKeyRegion string
+	if data.DestinationEncryptionKeyID.Valid {
+		encryptionKeyId = data.DestinationEncryptionKeyID.String
+	}
+	if data.DestinationEncryptionKeyRegion.Valid {
+		encryptionKeyRegion = data.DestinationEncryptionKeyRegion.String
+	}
+
+	link, err := s.ints.StorageClient.S3GetDownloadLinkWithEncryption(
 		data.DecryptedAccessKey, data.DecryptedSecretKey, data.Region.String,
 		data.Endpoint.String, data.BucketName.String, data.Path.String, time.Hour*12,
+		data.DestinationEncryptionType.String, encryptionKeyId, encryptionKeyRegion,
 	)
 	if err != nil {
 		return false, "", err

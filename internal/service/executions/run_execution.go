@@ -132,10 +132,19 @@ func (s *Service) RunExecution(ctx context.Context, backupID uuid.UUID) error {
 	}
 
 	if !back.BackupIsLocal {
-		fileSize, err = s.ints.StorageClient.S3Upload(
+		var encryptionKeyId, encryptionKeyRegion string
+		if back.DestinationEncryptionKeyID.Valid {
+			encryptionKeyId = back.DestinationEncryptionKeyID.String
+		}
+		if back.DestinationEncryptionKeyRegion.Valid {
+			encryptionKeyRegion = back.DestinationEncryptionKeyRegion.String
+		}
+		
+		fileSize, err = s.ints.StorageClient.S3UploadWithEncryption(
 			back.DecryptedDestinationAccessKey, back.DecryptedDestinationSecretKey,
 			back.DestinationRegion.String, back.DestinationEndpoint.String,
 			back.DestinationBucketName.String, path, dumpReader,
+			back.DestinationEncryptionType.String, encryptionKeyId, encryptionKeyRegion,
 		)
 		if err != nil {
 			logError(err)

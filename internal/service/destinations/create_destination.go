@@ -18,6 +18,12 @@ func (s *Service) CreateDestination(
 	}
 
 	params.EncryptionKey = s.env.PBW_ENCRYPTION_KEY
+	
+	// Set default encryption type if not specified
+	if params.EncryptionType == "" {
+		params.EncryptionType = "none"
+	}
+
 	dest, err := s.dbgen.DestinationsServiceCreateDestination(ctx, params)
 
 	_ = s.TestDestinationAndStoreResult(ctx, dest.ID)

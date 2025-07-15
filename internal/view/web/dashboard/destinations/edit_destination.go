@@ -32,13 +32,16 @@ func (h *handlers) editDestinationHandler(c echo.Context) error {
 
 	_, err = h.servs.DestinationsService.UpdateDestination(
 		ctx, dbgen.DestinationsServiceUpdateDestinationParams{
-			ID:         destinationID,
-			Name:       sql.NullString{String: formData.Name, Valid: true},
-			BucketName: sql.NullString{String: formData.BucketName, Valid: true},
-			Region:     sql.NullString{String: formData.Region, Valid: true},
-			Endpoint:   sql.NullString{String: formData.Endpoint, Valid: true},
-			AccessKey:  sql.NullString{String: formData.AccessKey, Valid: true},
-			SecretKey:  sql.NullString{String: formData.SecretKey, Valid: true},
+			ID:                  destinationID,
+			Name:                sql.NullString{String: formData.Name, Valid: true},
+			BucketName:          sql.NullString{String: formData.BucketName, Valid: true},
+			Region:              sql.NullString{String: formData.Region, Valid: true},
+			Endpoint:            sql.NullString{String: formData.Endpoint, Valid: true},
+			AccessKey:           sql.NullString{String: formData.AccessKey, Valid: true},
+			SecretKey:           sql.NullString{String: formData.SecretKey, Valid: true},
+			EncryptionType:      sql.NullString{String: formData.EncryptionType, Valid: formData.EncryptionType != ""},
+			EncryptionKeyID:     sql.NullString{String: formData.EncryptionKeyID, Valid: formData.EncryptionKeyID != ""},
+			EncryptionKeyRegion: sql.NullString{String: formData.EncryptionKeyRegion, Valid: formData.EncryptionKeyRegion != ""},
 		},
 	)
 	if err != nil {
@@ -142,6 +145,63 @@ func editDestinationButton(
 						nodx.Value(destination.DecryptedSecretKey),
 					},
 				}),
+
+				// Encryption settings
+				nodx.Div(
+					nodx.Class("border-t pt-4 mt-4"),
+					nodx.H3(
+						nodx.Class("text-lg font-semibold mb-2"),
+						nodx.Text("Encryption Settings"),
+					),
+					
+					component.SelectControl(component.SelectControlParams{
+						Name:        "encryption_type",
+						Label:       "Encryption Type",
+						Required:    false,
+						HelpText:    "Choose the server-side encryption method for your S3 objects.",
+						Children: []nodx.Node{
+							nodx.Option(
+								nodx.Value("none"),
+								nodx.If(destination.EncryptionType == "none", nodx.Selected("")),
+								nodx.Text("No encryption"),
+							),
+							nodx.Option(
+								nodx.Value("aes256"),
+								nodx.If(destination.EncryptionType == "aes256", nodx.Selected("")),
+								nodx.Text("AES-256 (S3 managed)"),
+							),
+							nodx.Option(
+								nodx.Value("aws:kms"),
+								nodx.If(destination.EncryptionType == "aws:kms", nodx.Selected("")),
+								nodx.Text("AWS KMS"),
+							),
+						},
+					}),
+
+					component.InputControl(component.InputControlParams{
+						Name:        "encryption_key_id",
+						Label:       "KMS Key ID",
+						Placeholder: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+						Required:    false,
+						Type:        component.InputTypeText,
+						HelpText:    "KMS Key ID or ARN (required for AWS KMS encryption).",
+						Children: []nodx.Node{
+							nodx.If(destination.EncryptionKeyID.Valid, nodx.Value(destination.EncryptionKeyID.String)),
+						},
+					}),
+
+					component.InputControl(component.InputControlParams{
+						Name:        "encryption_key_region",
+						Label:       "KMS Key Region",
+						Placeholder: "us-east-1",
+						Required:    false,
+						Type:        component.InputTypeText,
+						HelpText:    "Region where the KMS key is located (optional, defaults to bucket region).",
+						Children: []nodx.Node{
+							nodx.If(destination.EncryptionKeyRegion.Valid, nodx.Value(destination.EncryptionKeyRegion.String)),
+						},
+					}),
+				),
 			),
 
 			nodx.Div(

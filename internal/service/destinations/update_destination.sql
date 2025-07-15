@@ -14,6 +14,9 @@ SET
     WHEN sqlc.narg('secret_key')::TEXT IS NOT NULL
     THEN pgp_sym_encrypt(sqlc.narg('secret_key')::TEXT, sqlc.arg('encryption_key')::TEXT)
     ELSE secret_key
-  END
+  END,
+  encryption_type = COALESCE(sqlc.narg('encryption_type'), encryption_type),
+  encryption_key_id = COALESCE(sqlc.narg('encryption_key_id'), encryption_key_id),
+  encryption_key_region = COALESCE(sqlc.narg('encryption_key_region'), encryption_key_region)
 WHERE id = @id
 RETURNING *;

@@ -1,6 +1,8 @@
 package destinations
 
 import (
+	"database/sql"
+
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
@@ -12,12 +14,15 @@ import (
 )
 
 type createDestinationDTO struct {
-	Name       string `form:"name" validate:"required"`
-	BucketName string `form:"bucket_name" validate:"required"`
-	AccessKey  string `form:"access_key" validate:"required"`
-	SecretKey  string `form:"secret_key" validate:"required"`
-	Region     string `form:"region" validate:"required"`
-	Endpoint   string `form:"endpoint" validate:"required"`
+	Name                string `form:"name" validate:"required"`
+	BucketName          string `form:"bucket_name" validate:"required"`
+	AccessKey           string `form:"access_key" validate:"required"`
+	SecretKey           string `form:"secret_key" validate:"required"`
+	Region              string `form:"region" validate:"required"`
+	Endpoint            string `form:"endpoint" validate:"required"`
+	EncryptionType      string `form:"encryption_type"`
+	EncryptionKeyID     string `form:"encryption_key_id"`
+	EncryptionKeyRegion string `form:"encryption_key_region"`
 }
 
 func (h *handlers) createDestinationHandler(c echo.Context) error {
@@ -33,12 +38,15 @@ func (h *handlers) createDestinationHandler(c echo.Context) error {
 
 	_, err := h.servs.DestinationsService.CreateDestination(
 		ctx, dbgen.DestinationsServiceCreateDestinationParams{
-			Name:       formData.Name,
-			AccessKey:  formData.AccessKey,
-			SecretKey:  formData.SecretKey,
-			Region:     formData.Region,
-			Endpoint:   formData.Endpoint,
-			BucketName: formData.BucketName,
+			Name:                formData.Name,
+			AccessKey:           formData.AccessKey,
+			SecretKey:           formData.SecretKey,
+			Region:              formData.Region,
+			Endpoint:            formData.Endpoint,
+			BucketName:          formData.BucketName,
+			EncryptionType:      formData.EncryptionType,
+			EncryptionKeyID:     sql.NullString{Valid: formData.EncryptionKeyID != "", String: formData.EncryptionKeyID},
+			EncryptionKeyRegion: sql.NullString{Valid: formData.EncryptionKeyRegion != "", String: formData.EncryptionKeyRegion},
 		},
 	)
 	if err != nil {
@@ -117,6 +125,59 @@ func createDestinationButton() nodx.Node {
 					Type:        component.InputTypeText,
 					HelpText:    "It will be stored securely using PGP encryption.",
 				}),
+
+				// Encryption settings
+				nodx.Div(
+					nodx.Class("border-t pt-4 mt-4"),
+					nodx.H3(
+						nodx.Class("text-lg font-semibold mb-2"),
+						nodx.Text("Encryption Settings"),
+					),
+					
+					component.SelectControl(component.SelectControlParams{
+						Name:        "encryption_type",
+						Label:       "Encryption Type",
+						Required:    false,
+						HelpText:    "Choose the server-side encryption method for your S3 objects.",
+						Children: []nodx.Node{
+							nodx.Option(
+								nodx.Value("none"),
+								nodx.Selected(""),
+								nodx.Text("No encryption"),
+							),
+							nodx.Option(
+								nodx.Value("aes256"),
+								nodx.Text("AES-256 (S3 managed)"),
+							),
+							nodx.Option(
+								nodx.Value("aws:kms"),
+								nodx.Text("AWS KMS"),
+							),
+							nodx.Option(
+								nodx.Value("sse-c"),
+								nodx.Text("SSE-C (Customer-provided key)"),
+							),
+						},
+					}),
+
+					component.InputControl(component.InputControlParams{
+						Name:        "encryption_key_id",
+						Label:       "Encryption Key",
+						Placeholder: "Base64-encoded 256-bit key for SSE-C, or KMS key ARN for AWS KMS",
+						Required:    false,
+						Type:        component.InputTypeText,
+						HelpText:    "For SSE-C: base64-encoded 256-bit encryption key. For AWS KMS: KMS Key ID or ARN.",
+					}),
+
+					component.InputControl(component.InputControlParams{
+						Name:        "encryption_key_region",
+						Label:       "KMS Key Region",
+						Placeholder: "us-east-1",
+						Required:    false,
+						Type:        component.InputTypeText,
+						HelpText:    "Region where the KMS key is located (optional, defaults to bucket region).",
+					}),
+				),
 			),
 
 			nodx.Div(
