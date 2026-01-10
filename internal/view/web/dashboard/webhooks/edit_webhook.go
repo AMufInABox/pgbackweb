@@ -2,12 +2,10 @@ package webhooks
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
@@ -103,7 +101,7 @@ func editWebhookForm(
 	backups []dbgen.Backup,
 ) nodx.Node {
 	return nodx.FormEl(
-		htmx.HxPost(pathutil.BuildPath(fmt.Sprintf("/dashboard/webhooks/%s/edit", webhook.ID))),
+		htmx.HxPost("/dashboard/webhooks/"+webhook.ID.String()+"/edit"),
 		htmx.HxDisabledELT("find button[type='submit']"),
 		nodx.Class("space-y-2"),
 
@@ -128,7 +126,7 @@ func editWebhookButton(webhookID uuid.UUID) nodx.Node {
 		Title: "Edit webhook",
 		Content: []nodx.Node{
 			nodx.Div(
-				htmx.HxGet(pathutil.BuildPath(fmt.Sprintf("/dashboard/webhooks/%s/edit", webhookID))),
+				htmx.HxGet("/dashboard/webhooks/"+webhookID.String()+"/edit"),
 				htmx.HxSwap("outerHTML"),
 				htmx.HxTrigger("intersect once"),
 				nodx.Class("p-10 flex justify-center"),

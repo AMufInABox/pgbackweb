@@ -8,7 +8,6 @@ import (
 	"github.com/eduardolat/pgbackweb/internal/service/destinations"
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
 	"github.com/eduardolat/pgbackweb/internal/util/paginateutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/util/timeutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
@@ -63,16 +62,16 @@ func listDestinations(
 		trs = append(trs, nodx.Tr(
 			nodx.Td(component.OptionsDropdown(
 				component.OptionsDropdownA(
-					nodx.Href(pathutil.BuildPath(
+					nodx.Href(
 						fmt.Sprintf("/dashboard/executions?destination=%s", destination.ID),
-					)),
+					),
 					nodx.Target("_blank"),
 					lucide.List(),
 					component.SpanText("Show executions"),
 				),
 				editDestinationButton(destination),
 				component.OptionsDropdownButton(
-					htmx.HxPost(pathutil.BuildPath(fmt.Sprintf("/dashboard/destinations/%s/test", destination.ID))),
+					htmx.HxPost("/dashboard/destinations/"+destination.ID.String()+"/test"),
 					htmx.HxDisabledELT("this"),
 					lucide.PlugZap(),
 					component.SpanText("Test connection"),
@@ -131,9 +130,9 @@ func listDestinations(
 
 	if pagination.HasNextPage {
 		trs = append(trs, nodx.Tr(
-			htmx.HxGet(pathutil.BuildPath(fmt.Sprintf(
+			htmx.HxGet(fmt.Sprintf(
 				"/dashboard/destinations/list?page=%d", pagination.NextPage,
-			))),
+			)),
 			htmx.HxTrigger("intersect once"),
 			htmx.HxSwap("afterend"),
 		))

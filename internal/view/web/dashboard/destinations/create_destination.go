@@ -2,7 +2,6 @@ package destinations
 
 import (
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
@@ -46,13 +45,13 @@ func (h *handlers) createDestinationHandler(c echo.Context) error {
 		return respondhtmx.ToastError(c, err.Error())
 	}
 
-	return respondhtmx.Redirect(c, pathutil.BuildPath("/dashboard/destinations"))
+	return respondhtmx.Redirect(c, "/dashboard/destinations")
 }
 
 func createDestinationButton() nodx.Node {
 	htmxAttributes := func(url string) nodx.Node {
 		return nodx.Group(
-			htmx.HxPost(pathutil.BuildPath(url)),
+			htmx.HxPost(url),
 			htmx.HxInclude("#add-destination-form"),
 			htmx.HxDisabledELT(".add-destination-btn"),
 			htmx.HxIndicator("#add-destination-loading"),

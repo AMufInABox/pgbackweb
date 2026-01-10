@@ -6,7 +6,6 @@ import (
 
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
@@ -55,7 +54,7 @@ func (h *handlers) createWebhookHandler(c echo.Context) error {
 		return respondhtmx.ToastError(c, err.Error())
 	}
 
-	return respondhtmx.Redirect(c, pathutil.BuildPath("/dashboard/webhooks"))
+	return respondhtmx.Redirect(c, "/dashboard/webhooks")
 }
 
 func (h *handlers) createWebhookFormHandler(c echo.Context) error {
@@ -87,7 +86,7 @@ func createWebhookForm(
 	backups []dbgen.Backup,
 ) nodx.Node {
 	return nodx.FormEl(
-		htmx.HxPost(pathutil.BuildPath("/dashboard/webhooks/create")),
+		htmx.HxPost("/dashboard/webhooks/create"),
 		htmx.HxDisabledELT("find button[type='submit']"),
 		nodx.Class("space-y-2"),
 
@@ -112,7 +111,7 @@ func createWebhookButton() nodx.Node {
 		Title: "Create webhook",
 		Content: []nodx.Node{
 			nodx.Div(
-				htmx.HxGet(pathutil.BuildPath("/dashboard/webhooks/create")),
+				htmx.HxGet("/dashboard/webhooks/create"),
 				htmx.HxSwap("outerHTML"),
 				htmx.HxTrigger("intersect once"),
 				nodx.Class("p-10 flex justify-center"),

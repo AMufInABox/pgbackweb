@@ -1,9 +1,6 @@
 package databases
 
 import (
-	"fmt"
-
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
 	"github.com/google/uuid"
@@ -30,7 +27,7 @@ func (h *handlers) deleteDatabaseHandler(c echo.Context) error {
 
 func deleteDatabaseButton(databaseID uuid.UUID) nodx.Node {
 	return component.OptionsDropdownButton(
-		htmx.HxDelete(pathutil.BuildPath(fmt.Sprintf("/dashboard/databases/%s", databaseID))),
+		htmx.HxDelete("/dashboard/databases/"+databaseID.String()),
 		htmx.HxConfirm("Are you sure you want to delete this database?"),
 		lucide.Trash(),
 		component.SpanText("Delete database"),

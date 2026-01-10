@@ -7,7 +7,6 @@ import (
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/staticdata"
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
@@ -71,7 +70,7 @@ func (h *handlers) createBackupHandler(c echo.Context) error {
 		return respondhtmx.ToastError(c, err.Error())
 	}
 
-	return respondhtmx.Redirect(c, pathutil.BuildPath("/dashboard/backups"))
+	return respondhtmx.Redirect(c, "/dashboard/backups")
 }
 
 func (h *handlers) createBackupFormHandler(c echo.Context) error {
@@ -106,7 +105,7 @@ func createBackupForm(
 	serverTZ := time.Now().Location().String()
 
 	return nodx.FormEl(
-		htmx.HxPost(pathutil.BuildPath("/dashboard/backups")),
+		htmx.HxPost("/dashboard/backups"),
 		htmx.HxDisabledELT("find button"),
 		nodx.Class("space-y-2 text-base"),
 
@@ -323,7 +322,7 @@ func createBackupButton() nodx.Node {
 		Title: "Create backup task",
 		Content: []nodx.Node{
 			nodx.Div(
-				htmx.HxGet(pathutil.BuildPath("/dashboard/backups/create-form")),
+				htmx.HxGet("/dashboard/backups/create-form"),
 				htmx.HxSwap("outerHTML"),
 				htmx.HxTrigger("intersect once"),
 				nodx.Class("p-10 flex justify-center"),

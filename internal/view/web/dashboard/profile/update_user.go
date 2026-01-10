@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/reqctx"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
@@ -49,7 +48,7 @@ func updateUserForm(user dbgen.User) nodx.Node {
 	return component.CardBox(component.CardBoxParams{
 		Children: []nodx.Node{
 			nodx.FormEl(
-				htmx.HxPost(pathutil.BuildPath("/dashboard/profile")),
+				htmx.HxPost("/dashboard/profile"),
 				htmx.HxDisabledELT("find button"),
 				nodx.Class("space-y-2"),
 

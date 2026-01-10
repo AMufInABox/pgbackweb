@@ -9,7 +9,6 @@ import (
 	"github.com/eduardolat/pgbackweb/internal/service/webhooks"
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
 	"github.com/eduardolat/pgbackweb/internal/util/paginateutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/util/strutil"
 	"github.com/eduardolat/pgbackweb/internal/util/timeutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
@@ -89,7 +88,7 @@ func webhookExecutionsList(
 	if pagination.HasNextPage {
 		trs = append(trs, nodx.Tr(
 			htmx.HxGet(func() string {
-				url := pathutil.BuildPath("/dashboard/webhooks/" + webhookID.String() + "/executions")
+				url := "/dashboard/webhooks/" + webhookID.String() + "/executions"
 				url = strutil.AddQueryParamToUrl(url, "page", fmt.Sprintf("%d", pagination.NextPage))
 				return url
 			}()),
@@ -259,7 +258,7 @@ func webhookExecutionsButton(webhookID uuid.UUID) nodx.Node {
 				),
 				nodx.Tbody(
 					htmx.HxGet(
-						pathutil.BuildPath("/dashboard/webhooks/"+webhookID.String()+"/executions?page=1"),
+						"/dashboard/webhooks/"+webhookID.String()+"/executions?page=1",
 					),
 					htmx.HxIndicator("#webhook-executions-loading"),
 					htmx.HxTrigger("intersect once"),

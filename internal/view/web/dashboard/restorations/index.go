@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/util/strutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/reqctx"
@@ -67,7 +66,7 @@ func indexPage(reqCtx reqctx.Ctx, queryData resQueryData) nodx.Node {
 						nodx.Tbody(
 							component.SkeletonTr(8),
 							htmx.HxGet(func() string {
-								url := pathutil.BuildPath("/dashboard/restorations/list?page=1")
+								url := "/dashboard/restorations/list?page=1"
 								if queryData.Execution != uuid.Nil {
 									url = strutil.AddQueryParamToUrl(url, "execution", queryData.Execution.String())
 								}

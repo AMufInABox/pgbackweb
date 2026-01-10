@@ -5,7 +5,6 @@ import (
 
 	"github.com/eduardolat/pgbackweb/internal/logger"
 	"github.com/eduardolat/pgbackweb/internal/service"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/view/middleware"
 	"github.com/eduardolat/pgbackweb/internal/view/reqctx"
 	"github.com/eduardolat/pgbackweb/internal/view/web/auth"
@@ -22,7 +21,7 @@ func MountRouter(
 		reqCtx := reqctx.GetCtx(c)
 
 		if reqCtx.IsAuthed {
-			return c.Redirect(http.StatusFound, pathutil.BuildPath("/dashboard"))
+			return c.Redirect(http.StatusFound, "/dashboard")
 		}
 
 		usersQty, err := servs.UsersService.GetUsersQty(ctx)
@@ -36,10 +35,10 @@ func MountRouter(
 		}
 
 		if usersQty == 0 {
-			return c.Redirect(http.StatusFound, pathutil.BuildPath("/auth/create-first-user"))
+			return c.Redirect(http.StatusFound, "/auth/create-first-user")
 		}
 
-		return c.Redirect(http.StatusFound, pathutil.BuildPath("/auth/login"))
+		return c.Redirect(http.StatusFound, "/auth/login")
 	})
 
 	authGroup := parent.Group("/auth")

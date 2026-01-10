@@ -1,9 +1,6 @@
 package webhooks
 
 import (
-	"fmt"
-
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/respondhtmx"
 	"github.com/google/uuid"
@@ -30,7 +27,7 @@ func (h *handlers) deleteWebhookHandler(c echo.Context) error {
 
 func deleteWebhookButton(webhookID uuid.UUID) nodx.Node {
 	return component.OptionsDropdownButton(
-		htmx.HxDelete(pathutil.BuildPath(fmt.Sprintf("/dashboard/webhooks/%s", webhookID))),
+		htmx.HxDelete("/dashboard/webhooks/"+webhookID.String()),
 		htmx.HxConfirm("Are you sure you want to delete this webhook?"),
 		lucide.Trash(),
 		component.SpanText("Delete webhook"),

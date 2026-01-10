@@ -2,23 +2,9 @@ version: "3"
 
 dotenv: [".env"]
 
+interval: 500ms
+
 tasks:
-  ci:
-    desc: Run the CI tasks
-    cmds:
-      - task: deps
-      - task: fixperms
-      - task: checkdeps
-      - task: lint
-      - task: test
-      - task: build
-
-  deps:
-    desc: Install code dependencies
-    cmds:
-      - npm install
-      - go mod download
-
   dev:
     desc: Build and serve the project with hot reloading
     watch: true
@@ -50,23 +36,17 @@ tasks:
   build:
     desc: Build the project
     deps:
-      - gen:db
-      - build:static
+      - gen-db
+      - build-static
     cmds:
       - go build -o ./dist/app ./cmd/app/.
       - go build -o ./dist/change-password ./cmd/changepw/.
-
-  setversion:
-    desc: Set the version from latest git tag in the relevant files
-    cmds:
-      - chmod +x ./scripts/set-version.sh
-      - ./scripts/set-version.sh {{.CLI_ARGS}}
 
   serve:
     desc: Serve the built project
     cmd: ./dist/app
 
-  servem:
+  migrate-serve:
     desc: Run migrations and then serve the built project
     cmds:
       - task goose -- up
@@ -87,11 +67,11 @@ tasks:
       postgres "{{.PBW_POSTGRES_CONN_STRING}}"
       {{.CLI_ARGS}}
 
-  gen:db:
+  gen-db:
     desc: Generate sqlc files
     silent: true
     cmds:
-      - node ./scripts/sqlc-prebuild.ts
+      - deno run -A ./scripts/sqlc-prebuild.ts
       - sqlc generate
     sources:
       - ./internal/service/**/*.sql
@@ -99,21 +79,21 @@ tasks:
       - ./internal/database/queries.gen.sql
       - ./internal/database/dbgen/*.go
 
-  reset:db:
+  reset-db:
     desc: Reset the database
     cmd: go run ./cmd/resetdb/.
 
-  build:static:
+  build-static:
     desc: Build the static files (css and js)
     silent: true
     cmds:
       - >
-        npm run tailwindcss --
-        --minify
-        --config ./tailwind.config.ts
-        --input ./internal/view/static/css/style.css
-        --output ./internal/view/static/build/style.min.css
-      - node ./scripts/build-js.ts
+          deno task tailwindcss --
+          --minify
+          --config ./tailwind.config.ts
+          --input ./internal/view/static/css/style.css
+          --output ./internal/view/static/build/style.min.css
+      - deno run -A ./scripts/build-js.ts
 
   tidy:
     desc: Tidy the go.mod file
@@ -123,27 +103,34 @@ tasks:
     desc: Format the go and js files
     cmds:
       - go fmt ./...
-      - npm run prettier -- --write .
+      - deno fmt
 
-  lint:
+  lint-only:
     desc: Lint the go and js files
     cmds:
-      - task gen:db
+      - task gen-db
       - golangci-lint run ./...
-      - npm run prettier -- --check .
+      - deno lint
 
-  test:
+  test-only:
     desc: Run the tests
     cmds:
-      - task gen:db
+      - task gen-db
       - go test ./...
 
-  checkdeps:
+  check-deps:
     desc: Check if all required dependencies are installed
     silent: true
     cmds:
-      - chmod +x ./scripts/check-deps.sh
-      - ./scripts/check-deps.sh
+      - chmod +x ./scripts/check_deps.sh
+      - ./scripts/check_deps.sh
+
+  test:
+    desc: Run the checks, linters and tests
+    cmds:
+      - task check-deps
+      - task lint-only
+      - task test-only
 
   clean:
     desc: Clean the temporary and distribution folders
@@ -153,6 +140,4 @@ tasks:
 
   fixperms:
     desc: Fixes the permissions of the files in the project
-    cmds:
-      - mkdir -p /workspaces && chmod -R 777 /workspaces # For dev container
-      - mkdir -p /app && chmod -R 777 /app # For prod container
+    cmd: chmod -R 777 ./

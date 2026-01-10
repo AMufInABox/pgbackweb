@@ -54,14 +54,8 @@ var (
 		PGDump:  "/usr/lib/postgresql/17/bin/pg_dump",
 		PSQL:    "/usr/lib/postgresql/17/bin/psql",
 	}}
-	PG18 = PGVersion{version{
-		Version: "18",
-		PGDump:  "/usr/lib/postgresql/18/bin/pg_dump",
-		PSQL:    "/usr/lib/postgresql/18/bin/psql",
-	}}
 
-	PGVersions     = []PGVersion{PG13, PG14, PG15, PG16, PG17, PG18}
-	PGVersionsDesc = []PGVersion{PG18, PG17, PG16, PG15, PG14, PG13}
+	PGVersions = []PGVersion{PG13, PG14, PG15, PG16, PG17}
 )
 
 type Client struct{}
@@ -84,8 +78,6 @@ func (Client) ParseVersion(version string) (PGVersion, error) {
 		return PG16, nil
 	case "17":
 		return PG17, nil
-	case "18":
-		return PG18, nil
 	default:
 		return PGVersion{}, fmt.Errorf("pg version not allowed: %s", version)
 	}

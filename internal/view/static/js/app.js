@@ -1,11 +1,11 @@
 import { initThemeHelper } from "./init-theme-helper.js";
-import { initDialogs } from "./init-dialogs.js";
+import { initSweetAlert2 } from "./init-sweetalert2.js";
 import { initNotyf } from "./init-notyf.js";
 import { initHTMX } from "./init-htmx.js";
 import { initHelpers } from "./init-helpers.js";
 
 initThemeHelper();
-initDialogs();
+initSweetAlert2();
 initNotyf();
 initHTMX();
 initHelpers();

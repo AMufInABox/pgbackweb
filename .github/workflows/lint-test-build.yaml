@@ -1,4 +1,4 @@
-name: CI (Lint, Test, Build)
+name: Lint, test, and build
 on:
   workflow_dispatch:
   push:
@@ -11,14 +11,13 @@ on:
       - develop
 
 jobs:
-  ci:
+  lint-test-build:
     strategy:
       matrix:
-        vars:
-          [
-            { os: ubuntu-24.04, platform: linux/amd64 },
-            { os: ubuntu-24.04-arm, platform: linux/arm64 },
-          ]
+        vars: [
+          { os: ubuntu-24.04, platform: linux/amd64 },
+          { os: ubuntu-24.04-arm, platform: linux/arm64 },
+        ]
 
     name: Lint, test, and build the code
     runs-on: ${{ matrix.vars.os }}
@@ -42,4 +41,14 @@ jobs:
           --file docker/Dockerfile.dev .
 
       - name: Run lint, test, and build
-        run: docker run --rm -v $PWD:/app pgbackweb:latest /bin/bash -c "cd /app && task ci"
+        run: >
+          docker run --rm -v $PWD:/app pgbackweb:latest /bin/bash -c "
+            cd /app &&
+            deno install &&
+            go mod download &&
+            task fixperms &&
+            task check-deps &&
+            task lint-only &&
+            task test-only &&
+            task build
+          "

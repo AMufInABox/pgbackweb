@@ -6,7 +6,6 @@ import (
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/logger"
 	"github.com/eduardolat/pgbackweb/internal/util/echoutil"
-	"github.com/eduardolat/pgbackweb/internal/util/pathutil"
 	"github.com/eduardolat/pgbackweb/internal/validate"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/layout"
@@ -30,7 +29,7 @@ func (h *handlers) createFirstUserPageHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Internal server error")
 	}
 	if usersQty > 0 {
-		return c.Redirect(http.StatusFound, pathutil.BuildPath("/auth/login"))
+		return c.Redirect(http.StatusFound, "/auth/login")
 	}
 
 	return echoutil.RenderNodx(c, http.StatusOK, createFirstUserPage())
@@ -41,7 +40,7 @@ func createFirstUserPage() nodx.Node {
 		component.H1Text("Create first user"),
 
 		nodx.FormEl(
-			htmx.HxPost(pathutil.BuildPath("/auth/create-first-user")),
+			htmx.HxPost("/auth/create-first-user"),
 			htmx.HxDisabledELT("find button"),
 			nodx.Class("mt-4 space-y-2"),
 
@@ -53,9 +52,6 @@ func createFirstUserPage() nodx.Node {
 					Required:     true,
 					Type:         component.InputTypeText,
 					AutoComplete: "name",
-					Children: []nodx.Node{
-						nodx.Autofocus(""),
-					},
 				}),
 
 				component.InputControl(component.InputControlParams{
@@ -139,6 +135,6 @@ func (h *handlers) createFirstUserHandler(c echo.Context) error {
 	}
 
 	return respondhtmx.AlertWithRedirect(
-		c, "User created successfully", pathutil.BuildPath("/auth/login"),
+		c, "User created successfully", "/auth/login",
 	)
 }

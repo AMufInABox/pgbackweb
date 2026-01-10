@@ -2,11 +2,11 @@ export function initHTMX() {
   const triggers = {
     ctm_alert: function (evt) {
       const message = decodeURIComponent(evt.detail.value);
-      window.customAlert(message);
+      window.swalAlert(message);
     },
     ctm_alert_with_refresh: function (evt) {
       const message = decodeURIComponent(evt.detail.value);
-      window.customAlert(message).then(() => {
+      window.swalAlert(message).then(() => {
         location.reload();
       });
     },
@@ -19,7 +19,7 @@ export function initHTMX() {
       const message = parts[0];
       const url = parts[1];
 
-      window.customAlert(message).then(() => {
+      window.swalAlert(message).then(() => {
         location.href = url;
       });
     },
@@ -45,12 +45,12 @@ export function initHTMX() {
     document.addEventListener(key, triggers[key]);
   }
 
-  // Add trigger to use custom dialogs for confirms
+  //  Add trigger to use sweetalert2 for confirms
   document.addEventListener("htmx:confirm", function (e) {
     if (!e.detail.target.hasAttribute("hx-confirm")) return;
 
     e.preventDefault();
-    window.customConfirm(e.detail.question).then(function (result) {
+    window.swalConfirm(e.detail.question).then(function (result) {
       if (result.isConfirmed) e.detail.issueRequest(true);
     });
   });
