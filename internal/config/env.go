@@ -23,6 +23,7 @@ type Env struct {
 	PBW_OIDC_USERNAME_CLAIM string `env:"PBW_OIDC_USERNAME_CLAIM" envDefault:"preferred_username"`
 	PBW_OIDC_EMAIL_CLAIM    string `env:"PBW_OIDC_EMAIL_CLAIM" envDefault:"email"`
 	PBW_OIDC_NAME_CLAIM     string `env:"PBW_OIDC_NAME_CLAIM" envDefault:"name"`
+	PBW_PATH_PREFIX          string `env:"PBW_PATH_PREFIX" envDefault:""`
 }
 
 var (
