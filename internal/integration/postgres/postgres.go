@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/eduardolat/pgbackweb/internal/util/strutil"
 	"github.com/orsinium-labs/enum"
@@ -122,7 +124,7 @@ type DumpParams struct {
 	Clean bool
 
 	// IfExists (--if-exists): Use DROP ... IF EXISTS commands to drop objects in
-	// --clean mode. This suppresses “does not exist” errors that might otherwise
+	// --clean mode. This suppresses "does not exist" errors that might otherwise
 	// be reported. This option is not valid unless --clean is also specified.
 	IfExists bool
 
@@ -147,7 +149,7 @@ func (Client) Dump(
 		pickedParams = params[0]
 	}
 
-	args := []string{connString}
+	args := []string{connString, "--no-owner", "--no-acl"}
 	if pickedParams.DataOnly {
 		args = append(args, "--data-only")
 	}
@@ -215,6 +217,96 @@ func (c *Client) DumpZip(
 	return reader
 }
 
+// parseDatabaseName extracts the database name from a PostgreSQL connection string.
+// It supports both URL format (postgres://user:pass@host:port/dbname) and
+// key-value format (host=localhost dbname=mydb user=postgres).
+func (Client) parseDatabaseName(connString string) (string, error) {
+	// Try URL format first
+	if strings.HasPrefix(connString, "postgres://") || strings.HasPrefix(connString, "postgresql://") {
+		u, err := url.Parse(connString)
+		if err != nil {
+			return "", fmt.Errorf("error parsing connection string URL: %w", err)
+		}
+		dbName := strings.TrimPrefix(u.Path, "/")
+		if dbName == "" {
+			return "", fmt.Errorf("no database name found in connection string")
+		}
+		return dbName, nil
+	}
+
+	// Try key-value format
+	parts := strings.Fields(connString)
+	for _, part := range parts {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) == 2 && kv[0] == "dbname" {
+			return kv[1], nil
+		}
+	}
+
+	return "", fmt.Errorf("no database name found in connection string")
+}
+
+// replaceDatabase replaces the database name in a connection string with a new database name.
+// This is used to connect to the postgres maintenance database instead of the target database.
+func (Client) replaceDatabase(connString, newDBName string) (string, error) {
+	// Try URL format first
+	if strings.HasPrefix(connString, "postgres://") || strings.HasPrefix(connString, "postgresql://") {
+		u, err := url.Parse(connString)
+		if err != nil {
+			return "", fmt.Errorf("error parsing connection string URL: %w", err)
+		}
+		u.Path = "/" + newDBName
+		return u.String(), nil
+	}
+
+	// Try key-value format
+	parts := strings.Fields(connString)
+	var newParts []string
+	foundDBName := false
+	for _, part := range parts {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) == 2 && kv[0] == "dbname" {
+			newParts = append(newParts, fmt.Sprintf("dbname=%s", newDBName))
+			foundDBName = true
+		} else {
+			newParts = append(newParts, part)
+		}
+	}
+
+	if !foundDBName {
+		return "", fmt.Errorf("no database name found in connection string")
+	}
+
+	return strings.Join(newParts, " "), nil
+}
+
+// terminateConnections terminates all active connections to a database except the current one.
+// This is necessary before dropping or restoring a database.
+func (c *Client) terminateConnections(version PGVersion, connString, targetDB string) error {
+	// Create connection string to postgres maintenance database
+	maintenanceConnString, err := c.replaceDatabase(connString, "postgres")
+	if err != nil {
+		return fmt.Errorf("error creating maintenance connection string: %w", err)
+	}
+
+	// SQL to terminate all connections to the target database
+	sql := fmt.Sprintf(
+		"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s' AND pid <> pg_backend_pid();",
+		strings.ReplaceAll(targetDB, "'", "''"), // Escape single quotes
+	)
+
+	cmd := exec.Command(version.Value.PSQL, maintenanceConnString, "-c", sql)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(
+			"error terminating connections to database %s: %s",
+			targetDB, output,
+		)
+	}
+
+	return nil
+}
+
 // RestoreZip downloads or copies the ZIP from the given url or path, unzips it,
 // and runs the psql command to restore the database.
 //
@@ -224,17 +316,20 @@ func (c *Client) DumpZip(
 //   - connString: connection string to the database
 //   - isLocal: whether the ZIP file is local or a URL
 //   - zipURLOrPath: URL or path to the ZIP file
-func (Client) RestoreZip(
+func (c *Client) RestoreZip(
 	version PGVersion, connString string, isLocal bool, zipURLOrPath string,
 ) error {
+	// Create temp work directory
 	workDir, err := os.MkdirTemp("", "pbw-restore-*")
 	if err != nil {
 		return fmt.Errorf("error creating temp dir: %w", err)
 	}
 	defer os.RemoveAll(workDir)
+
 	zipPath := strutil.CreatePath(true, workDir, "dump.zip")
 	dumpPath := strutil.CreatePath(true, workDir, "dump.sql")
 
+	// Handle local ZIP
 	if isLocal {
 		cmd := exec.Command("cp", zipURLOrPath, zipPath)
 		output, err := cmd.CombinedOutput()
@@ -243,18 +338,21 @@ func (Client) RestoreZip(
 		}
 	}
 
+	// Handle remote ZIP
 	if !isLocal {
-		cmd := exec.Command("wget", "--no-verbose", "-O", zipPath, zipURLOrPath)
+		cmd := exec.Command("curl", "-L", "-o", zipPath, zipURLOrPath)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("error downloading ZIP file: %s", output)
+			return fmt.Errorf("error downloading ZIP file: %s", string(output))
 		}
 	}
 
+	// Verify ZIP exists
 	if _, err := os.Stat(zipPath); os.IsNotExist(err) {
 		return fmt.Errorf("zip file not found: %s", zipPath)
 	}
 
+	// Unzip dump.sql
 	cmd := exec.Command("unzip", "-o", zipPath, "dump.sql", "-d", workDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -265,13 +363,40 @@ func (Client) RestoreZip(
 		return fmt.Errorf("dump.sql file not found in ZIP file: %s", zipPath)
 	}
 
+	// Read dump content to check for DROP/CREATE DATABASE
+	dumpContent, err := os.ReadFile(dumpPath)
+	if err != nil {
+		return fmt.Errorf("error reading dump.sql file: %w", err)
+	}
+	dumpStr := string(dumpContent)
+	containsDropDatabase := strings.Contains(dumpStr, "DROP DATABASE")
+	containsCreateDatabase := strings.Contains(dumpStr, "CREATE DATABASE")
+
+	if containsDropDatabase || containsCreateDatabase {
+		// Extract database name
+		dbName, err := c.parseDatabaseName(connString)
+		if err != nil {
+			return fmt.Errorf("error parsing database name from connection string: %w", err)
+		}
+
+		// Terminate active connections
+		if err := c.terminateConnections(version, connString, dbName); err != nil {
+			return fmt.Errorf("error terminating database connections: %w", err)
+		}
+
+		// Switch to maintenance DB
+		maintenanceConnString, err := c.replaceDatabase(connString, "postgres")
+		if err != nil {
+			return fmt.Errorf("error creating maintenance connection string: %w", err)
+		}
+		connString = maintenanceConnString
+	}
+
+	// Execute restore
 	cmd = exec.Command(version.Value.PSQL, connString, "-f", dumpPath)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf(
-			"error running psql v%s command: %s",
-			version.Value.Version, output,
-		)
+		return fmt.Errorf("error running psql v%s command: %s", version.Value.Version, output)
 	}
 
 	return nil

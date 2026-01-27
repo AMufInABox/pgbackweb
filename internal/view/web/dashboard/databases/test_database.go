@@ -25,6 +25,7 @@ func (h *handlers) testDatabaseHandler(c echo.Context) error {
 		return respondhtmx.ToastError(c, err.Error())
 	}
 
+
 	return respondhtmx.ToastSuccess(c, "Connection successful")
 }
 
@@ -34,11 +35,9 @@ func (h *handlers) testExistingDatabaseHandler(c echo.Context) error {
 	if err != nil {
 		return respondhtmx.ToastError(c, err.Error())
 	}
-
 	err = h.servs.DatabasesService.TestDatabaseAndStoreResult(ctx, databaseID)
 	if err != nil {
 		return respondhtmx.ToastError(c, err.Error())
 	}
-
 	return respondhtmx.ToastSuccess(c, "Connection successful")
 }

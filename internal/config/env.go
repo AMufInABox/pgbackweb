@@ -13,6 +13,17 @@ type Env struct {
 	PBW_LISTEN_HOST          string `env:"PBW_LISTEN_HOST" envDefault:"0.0.0.0"`
 	PBW_LISTEN_PORT          string `env:"PBW_LISTEN_PORT" envDefault:"8085"`
 	PBW_PATH_PREFIX          string `env:"PBW_PATH_PREFIX" envDefault:""`
+
+	// OIDC Configuration
+	PBW_OIDC_ENABLED        bool   `env:"PBW_OIDC_ENABLED" envDefault:"false"`
+	PBW_OIDC_ISSUER_URL     string `env:"PBW_OIDC_ISSUER_URL"`
+	PBW_OIDC_CLIENT_ID      string `env:"PBW_OIDC_CLIENT_ID"`
+	PBW_OIDC_CLIENT_SECRET  string `env:"PBW_OIDC_CLIENT_SECRET"`
+	PBW_OIDC_REDIRECT_URL   string `env:"PBW_OIDC_REDIRECT_URL"`
+	PBW_OIDC_SCOPES         string `env:"PBW_OIDC_SCOPES" envDefault:"openid profile email"`
+	PBW_OIDC_USERNAME_CLAIM string `env:"PBW_OIDC_USERNAME_CLAIM" envDefault:"preferred_username"`
+	PBW_OIDC_EMAIL_CLAIM    string `env:"PBW_OIDC_EMAIL_CLAIM" envDefault:"email"`
+	PBW_OIDC_NAME_CLAIM     string `env:"PBW_OIDC_NAME_CLAIM" envDefault:"name"`
 }
 
 var (
