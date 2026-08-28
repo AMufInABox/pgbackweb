@@ -63,55 +63,6 @@ func updateUserForm(user dbgen.User) nodx.Node {
 	// Build form fields
 	formFields := []nodx.Node{
 		component.H2Text("Update profile"),
-	return component.CardBox(component.CardBoxParams{
-		Children: []nodx.Node{
-			nodx.FormEl(
-				htmx.HxPost(pathutil.BuildPath("/dashboard/profile")),
-				htmx.HxDisabledELT("find button"),
-				nodx.Class("space-y-2"),
-
-				component.H2Text("Update profile"),
-
-				component.InputControl(component.InputControlParams{
-					Name:         "name",
-					Label:        "Full name",
-					Placeholder:  "Your full name",
-					Required:     true,
-					Type:         component.InputTypeText,
-					AutoComplete: "name",
-					Children: []nodx.Node{
-						nodx.Value(user.Name),
-					},
-				}),
-
-				component.InputControl(component.InputControlParams{
-					Name:         "email",
-					Label:        "Email",
-					Placeholder:  "Your email",
-					Required:     true,
-					AutoComplete: "email",
-					Type:         component.InputTypeEmail,
-					Children: []nodx.Node{
-						nodx.Value(user.Email),
-					},
-				}),
-
-				component.InputControl(component.InputControlParams{
-					Name:         "password",
-					Label:        "Change password",
-					Placeholder:  "New password",
-					AutoComplete: "new-password",
-					Type:         component.InputTypePassword,
-					HelpText:     "Leave empty to keep your current password",
-				}),
-
-				component.InputControl(component.InputControlParams{
-					Name:         "password_confirmation",
-					Label:        "Confirm password",
-					Placeholder:  "Confirm new password",
-					AutoComplete: "new-password",
-					Type:         component.InputTypePassword,
-				}),
 
 		// Show different message for OIDC users
 		nodx.If(isOIDCUser,
@@ -201,7 +152,7 @@ func updateUserForm(user dbgen.User) nodx.Node {
 		Children: []nodx.Node{
 			nodx.FormEl(
 				append([]nodx.Node{
-					nodx.If(!isOIDCUser, htmx.HxPost("/dashboard/profile")),
+					nodx.If(!isOIDCUser, htmx.HxPost(pathutil.BuildPath("/dashboard/profile"))),
 					nodx.If(!isOIDCUser, htmx.HxDisabledELT("find button")),
 					nodx.Class("space-y-2"),
 				}, formFields...)...,

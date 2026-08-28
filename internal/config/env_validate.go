@@ -30,6 +30,8 @@ func validateEnv(env Env) error {
 		if env.PBW_OIDC_REDIRECT_URL == "" {
 			return fmt.Errorf("PBW_OIDC_REDIRECT_URL is required when OIDC is enabled")
 		}
+	}
+
 	if !validate.PathPrefix(env.PBW_PATH_PREFIX) {
 		return fmt.Errorf("invalid path prefix %s, must start with / and not end with / (or be empty)", env.PBW_PATH_PREFIX)
 	}
