@@ -92,16 +92,22 @@ func (Client) ParseVersion(version string) (PGVersion, error) {
 }
 
 // Test tests the connection to the PostgreSQL database
-func (Client) Test(version PGVersion, connString string) error {
+func (c Client) Test(version PGVersion, connString string) error {
 	cmd := exec.Command(version.Value.PSQL, connString, "-c", "SELECT 1;")
+	fmt.Printf("Running command: %s %s -c 'SELECT 1;'\n", version.Value.PSQL, connString)
+
 	output, err := cmd.CombinedOutput()
+	fmt.Printf("Command output: %s\n", output)
+
 	if err != nil {
+		fmt.Printf("Command error: %v\n", err)
 		return fmt.Errorf(
 			"error running psql test v%s: %s",
 			version.Value.Version, output,
 		)
 	}
 
+	fmt.Println("PSQL test succeeded")
 	return nil
 }
 

@@ -1,0 +1,59 @@
+services:
+  pgbackweb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports: 
+      - "8085:8085"
+    env_file:
+      - .env
+    environment:
+      # Core app settings
+      PBW_ENCRYPTION_KEY: ${PBW_ENCRYPTION_KEY}
+      PBW_POSTGRES_CONN_STRING: ${PBW_POSTGRES_CONN_STRING}
+      TZ: ${TZ}
+
+      # Enable OIDC
+      PBW_OIDC_ENABLED: ${PBW_OIDC_ENABLED}
+      PBW_OIDC_ISSUER_URL: ${PBW_OIDC_ISSUER_URL}
+      PBW_OIDC_CLIENT_ID: ${PBW_OIDC_CLIENT_ID}
+      PBW_OIDC_CLIENT_SECRET: ${PBW_OIDC_CLIENT_SECRET}
+      PBW_OIDC_REDIRECT_URL: ${PBW_OIDC_REDIRECT_URL}
+
+      # Optional tuning
+      PBW_OIDC_SCOPES: ${PBW_OIDC_SCOPES}
+      PBW_OIDC_USERNAME_CLAIM: ${PBW_OIDC_USERNAME_CLAIM}
+      PBW_OIDC_EMAIL_CLAIM: ${PBW_OIDC_EMAIL_CLAIM}
+      PBW_OIDC_NAME_CLAIM: ${PBW_OIDC_NAME_CLAIM}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - default
+      - authentik-network
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pgbackweb
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/18/docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+networks:
+  default:
+  authentik-network:
+    external: true
+    name: authentik_authentik-network
